@@ -16,4 +16,8 @@
     <ProjectReference Include="..\DocumentManagementSystem\Web.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Folder Include="Models\Entities\" />
+  </ItemGroup>
+
 </Project>
