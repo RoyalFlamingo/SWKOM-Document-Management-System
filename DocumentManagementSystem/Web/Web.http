@@ -1,6 +1,6 @@
-@DocumentManagementSystem_HostAddress = http://localhost:5083
+@Web_HostAddress = http://localhost:5083
 
-GET {{DocumentManagementSystem_HostAddress}}/api/
+GET {{Web_HostAddress}}/api/
 Accept: application/json
 
 ###

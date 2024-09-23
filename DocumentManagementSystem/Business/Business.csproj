@@ -13,12 +13,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\DocumentManagementSystem\Web.csproj" />
-    <ProjectReference Include="..\Persistance\Persistence.csproj" />
-    <ProjectReference Include="..\Web\Web.csproj" />
-  </ItemGroup>
-
-  <ItemGroup>
     <Folder Include="Models\" />
     <Folder Include="Services\" />
   </ItemGroup>
