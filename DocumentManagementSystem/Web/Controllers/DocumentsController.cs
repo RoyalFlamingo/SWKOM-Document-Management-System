@@ -12,8 +12,8 @@ namespace DocumentManagementSystem.Controllers
 		private readonly ILogger<DocumentsController> _logger;
 
 		// Test data, to be replaced with the actual service
-		private static readonly List<Document> _documents = new List<Document>();
-		private static int nextId = 1;
+		private static readonly List<Document> _documents = new List<Document>() { new Document { Id = 1, Name = "Fake Document 1" } };
+		private static int nextId = 2;
 
 		public DocumentsController(ILogger<DocumentsController> logger)
 		{

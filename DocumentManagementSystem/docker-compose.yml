@@ -1,90 +1,23 @@
-version: '3.8'
-
 services:
+
   web:
+    image: paperless-rest
     build:
       context: .
       dockerfile: Web/Dockerfile
     ports:
-      - "5000:8080"
-      - "5001:8081"
+     - "8081:8081"
+     - "8080:8080"
     environment:
       - ASPNETCORE_ENVIRONMENT=Development
-      - ConnectionStrings__DefaultConnection=Host=postgres;Database=dmsdb;Username=karo;Password=karo
-      - RabbitMQ__HostName=rabbitmq
-      - ElasticSearch__Uri=http://elasticsearch:9200
-    depends_on:
-      - postgres
-      - rabbitmq
-      - elasticsearch
-      - paperless
+      - ASPNETCORE_URLS=http://+:8080;https://+:8081
 
-  postgres:
-    image: postgres:latest
-    environment:
-      POSTGRES_USER: karo
-      POSTGRES_PASSWORD: karo
-      POSTGRES_DB: dmsdb
+  nginx:
+    image: nginx:alpine
+    ports:
+      - "80:80"
     volumes:
-      - postgres-data:/var/lib/postgresql/data
-
-  rabbitmq:
-    image: rabbitmq:3-management
-    ports:
-      - "5672:5672"
-      - "15672:15672"
-    environment:
-      - RABBITMQ_DEFAULT_USER=karo
-      - RABBITMQ_DEFAULT_PASS=karo
-
-  elasticsearch:
-    image: docker.elastic.co/elasticsearch/elasticsearch:8.15.1
-    environment:
-      - discovery.type=single-node
-      - xpack.security.enabled=false
-    ports:
-      - "9200:9200"
-    volumes:
-      - es-data:/usr/share/elasticsearch/data
-
-  kibana:
-    image: docker.elastic.co/kibana/kibana:8.15.1
-    ports:
-      - "5601:5601"
-    environment:
-      - ELASTICSEARCH_HOSTS=http://elasticsearch:9200
+      - ./Web/wwwroot/nginx.conf:/etc/nginx/nginx.conf
+      - ./Web/wwwroot/html:/usr/share/nginx/html
     depends_on:
-      - elasticsearch
-
-  logstash:
-    image: docker.elastic.co/logstash/logstash:8.15.1
-    ports:
-      - "5044:5044"
-    volumes:
-      - ./logstash-pipeline:/usr/share/logstash/pipeline
-    depends_on:
-      - elasticsearch
-
-  paperless:
-    image: ghcr.io/paperless-ngx/paperless-ngx:latest
-    environment:
-      - PAPERLESS_REDIS=redis://redis
-      - PAPERLESS_DBHOST=postgres
-      - PAPERLESS_DBNAME=dmsdb
-      - PAPERLESS_DBUSER=karo
-      - PAPERLESS_DBPASS=karo
-      - PAPERLESS_ADMIN_USER=karo
-      - PAPERLESS_ADMIN_PASSWORD=karo
-      - PAPERLESS_ADMIN_EMAIL=karolinaaigner@gmail.com
-    depends_on:
-      - postgres
-      - redis
-    ports:
-      - "8000:8000"
-
-  redis:
-    image: redis:alpine
-
-volumes:
-  postgres-data:
-  es-data:
+      - web
