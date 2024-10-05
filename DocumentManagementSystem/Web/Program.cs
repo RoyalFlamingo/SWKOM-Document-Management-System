@@ -10,6 +10,15 @@ namespace DocumentManagementSystem
 		{
 			var builder = WebApplication.CreateBuilder(args);
 
+			builder.Services.AddCors(options =>
+			{
+				options.AddPolicy("AllowSpecificOrigin",
+					builder => builder
+						.WithOrigins("http://localhost")
+						.AllowAnyMethod()
+						.AllowAnyHeader());
+			});
+
 			// Versioning
 			builder.Services
 				.AddApiVersioning(options =>
@@ -53,6 +62,8 @@ namespace DocumentManagementSystem
 			});
 
 			var app = builder.Build();
+
+			app.UseCors("AllowSpecificOrigin");
 
 			if (app.Environment.IsDevelopment())
 			{
