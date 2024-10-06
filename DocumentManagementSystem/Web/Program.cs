@@ -14,7 +14,7 @@ namespace DocumentManagementSystem
 			{
 				options.AddPolicy("AllowSpecificOrigin",
 					builder => builder
-						.WithOrigins("http://localhost")
+						.WithOrigins("http://localhost", "http://localhost:8080")
 						.AllowAnyMethod()
 						.AllowAnyHeader());
 			});
