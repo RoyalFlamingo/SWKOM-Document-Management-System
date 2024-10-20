@@ -24,6 +24,8 @@ function fetchDocuments() {
 
 // Function to add a new document
 function addDocument() {
+
+    const errorDiv = document.getElementById('errorMessages');
     const fileInput = document.getElementById('documentFile'); // Nehme den File-Input vom HTML
     const file = fileInput.files[0]; // Die ausgewählte Datei
 
@@ -44,9 +46,11 @@ function addDocument() {
             if (response.ok) {
                 fetchDocuments(); // Aktualisiere die Liste nach dem Upload
                 fileInput.value = ''; // Leere das File-Input-Feld
+                errorDiv.innerHTML = '';
             } else {
-                response.json().then(err => alert("Fehler: " + err.message));
-                console.error('Fehler beim Hochladen.');
+                response.json().then(err => {
+                    errorDiv.innerHTML = `<ul>` + Object.values(err.errors).map(e => `<li>${e}</li>`).join('') + `</ul>`;
+                });
             }
         })
         .catch(error => console.error('Fehler:', error));

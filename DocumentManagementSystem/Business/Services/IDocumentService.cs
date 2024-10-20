@@ -3,8 +3,8 @@
 namespace Business.Services;
 public interface IDocumentService
 {
-	Task AddDocument(Document document);
-	Task<Document> GetDocumentById(uint id);
-	Task DeleteDocumentById(uint id);
-	Task<List<Document>> GetAllDocuments();
+	Task AddDocumentAsync(Document document);
+	Task<Document> GetDocumentByIdAsync(uint id);
+	Task DeleteDocumentByIdAsync(uint id);
+	Task<List<Document>> GetAllDocumentsAsync();
 }

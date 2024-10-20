@@ -5,14 +5,27 @@ using Persistence;
 using Npgsql;
 using Microsoft.EntityFrameworkCore;
 using System.Reflection;
+using Business.Services;
+using Business.Mapping.Profiles;
+using Business.Models.Domain;
+using Business.Models.DTO.Validation;
+using FluentValidation.AspNetCore;
+using FluentValidation;
 
 namespace DocumentManagementSystem
 {
 	public class Program
 	{
+		[Obsolete]
 		public static void Main(string[] args)
 		{
 			var builder = WebApplication.CreateBuilder(args);
+
+			// logger
+			builder.Logging.ClearProviders();
+			builder.Logging.AddConsole();
+			builder.Logging.AddDebug();
+			builder.Logging.AddEventSourceLogger();
 
 			builder.Services.AddCors(options =>
 			{
@@ -45,9 +58,23 @@ namespace DocumentManagementSystem
 				options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
 
 			// automapper
-			builder.Services.AddAutoMapper(Assembly.GetExecutingAssembly());
+			builder.Services.AddAutoMapper(cfg =>
+			{
+				cfg.AddMaps(new[]
+				{
+					Assembly.GetExecutingAssembly(),
+					typeof(DocumentToDocumentEntityMappingProfile).Assembly // get business assembly
+				 });
+			});
+
+			// fluentvalidation
+			builder.Services.AddFluentValidationAutoValidation();
+			builder.Services.AddValidatorsFromAssemblyContaining<DocumentUploadDtoValidator>();
 
 			// Services
+			builder.Services.AddScoped<IDocumentService, DocumentService>();
+
+
 			builder.Services.AddControllers();
 			builder.Services.AddEndpointsApiExplorer();
 			builder.Services.AddSwaggerGen(c =>

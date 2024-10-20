@@ -1,6 +1,6 @@
 ﻿namespace Business.Models.Domain;
 
-public record class Document
+public record class DocumentResponseDto
 {
 	public int Id { get; set; }
 	public required string Name { get; set; }

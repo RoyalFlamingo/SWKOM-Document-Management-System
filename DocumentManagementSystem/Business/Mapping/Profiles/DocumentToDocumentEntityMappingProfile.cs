@@ -6,10 +6,9 @@ namespace Business.Mapping.Profiles;
 
 public class DocumentToDocumentEntityMappingProfile : Profile
 {
-    public DocumentToDocumentEntityMappingProfile()
-    {
-        CreateMap<DocumentEntity, Document>();
-        CreateMap<DocumentEntity, Document>().ReverseMap();
-    }
+	public DocumentToDocumentEntityMappingProfile()
+	{
+		CreateMap<Document, DocumentEntity>()
+			.ReverseMap();
+	}
 }
-

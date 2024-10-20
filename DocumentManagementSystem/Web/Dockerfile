@@ -12,10 +12,10 @@ COPY ["Persistence/Persistence.csproj", "Persistence/"]
 RUN dotnet restore "Web/Web.csproj"
 COPY . .
 WORKDIR "/src/Web"
-RUN dotnet build "Web.csproj" -c Release -o /app/build
+RUN dotnet build "Web.csproj" -c Debug -o /app/build
 
 FROM build AS publish
-RUN dotnet publish "Web.csproj" -c Release -o /app/publish
+RUN dotnet publish "Web.csproj" -c Debug -o /app/publish
 
 FROM base AS final
 WORKDIR /app

@@ -15,6 +15,10 @@ namespace Persistence
 
 		protected override void OnModelCreating(ModelBuilder modelBuilder)
 		{
+			modelBuilder.Entity<DocumentEntity>() //increment id
+				.Property(d => d.Id)
+				.ValueGeneratedOnAdd();
+			
 			base.OnModelCreating(modelBuilder);
 		}
 	}

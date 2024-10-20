@@ -5,13 +5,19 @@ services:
     build:
       context: .
       dockerfile: Web/Dockerfile
+      target: debug
     ports:
      - "8081:8081"
+     - "5005:5005" # remote debugging
     environment:
       - ASPNETCORE_ENVIRONMENT=Development
       - ASPNETCORE_URLS=https://+:8081
+      - DOTNET_USE_POLLING_FILE_WATCHER=1  # hot reload for debugging
+      - ASPNETCORE_REMOTE_DEBUGGING=5005   # port for debugging
     depends_on:
       - postgres
+    volumes:
+      - ./src:/app
 
   nginx:
     image: nginx:alpine

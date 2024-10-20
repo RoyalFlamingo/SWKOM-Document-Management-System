@@ -2,32 +2,39 @@ using Microsoft.AspNetCore.Mvc;
 using Asp.Versioning;
 using Persistence.Models.Entities;
 using Business.Services;
+using Business.Models.Domain;
+using AutoMapper;
 
 namespace DocumentManagementSystem.Controllers
 {
 	[ApiController]
 	[ApiVersion("1")]
 	[Route("api/v{version:apiVersion}/[controller]")]
-	public class DocumentsController(ILogger<DocumentsController> logger, IDocumentService documentService) : ControllerBase
+	public class DocumentsController(ILogger<DocumentsController> logger, IDocumentService documentService, IMapper mapper) : ControllerBase
 	{
 		private readonly ILogger<DocumentsController> _logger = logger;
 		private readonly IDocumentService _documentService = documentService;
+		private readonly IMapper _mapper = mapper;
 
 		// Upload document
 		[HttpPost(Name = "UploadDocument")]
 		[ProducesResponseType(StatusCodes.Status200OK)]
-		public async Task<ActionResult> UploadDocumentAsync(IFormFile file)
+		public async Task<ActionResult> UploadDocumentAsync([FromForm] DocumentUploadDto documentUploadDto)
 		{
-			// Testing
-			var document = new DocumentEntity
+			if(!ModelState.IsValid)
 			{
-				Id = nextId++,
-				Name = file.FileName,
-				Size = file.Length,
-				UploadedAt = DateTime.UtcNow
+				return BadRequest(ModelState);
+			}
+
+			var documentRequest = new DocumentRequestDto
+			{
+				Name = documentUploadDto.File.FileName,
+				Size = documentUploadDto.File.Length
 			};
 
-			_documents.Add(document);
+			var document = _mapper.Map<Document>(documentRequest);
+
+			await _documentService.AddDocumentAsync(document);
 
 			return Ok(document);
 		}
@@ -38,14 +45,16 @@ namespace DocumentManagementSystem.Controllers
 		[ProducesResponseType(StatusCodes.Status404NotFound)]
 		public async Task<ActionResult<DocumentEntity>> GetDocumentById(int id)
 		{
-			// Testing
-			var document = _documents.FirstOrDefault(d => d.Id == id);
-			if (document == null)
+			try
+			{
+				var document = await _documentService.GetDocumentByIdAsync((uint)id);
+				var documentResponse = _mapper.Map<DocumentResponseDto>(document);
+				return Ok(documentResponse);
+			}
+			catch (KeyNotFoundException ex)
 			{
 				return NotFound();
 			}
-
-			return Ok(document);
 		}
 
 		// Lists all documents
@@ -53,7 +62,9 @@ namespace DocumentManagementSystem.Controllers
 		[ProducesResponseType(StatusCodes.Status200OK)]
 		public async Task<ActionResult> ListDocumentsAsync()
 		{
-			return Ok(_documents);
+			var documents = await _documentService.GetAllDocumentsAsync();
+			var documentResponses = _mapper.Map<List<DocumentResponseDto>>(documents);
+			return Ok(documentResponses);
 		}
 
 		// Delete a specific document based on id
@@ -62,14 +73,15 @@ namespace DocumentManagementSystem.Controllers
 		[ProducesResponseType(StatusCodes.Status404NotFound)]
 		public async Task<ActionResult> DeleteDocumentAsync(int id)
 		{
-			var document = _documents.FirstOrDefault(d => d.Id == id);
-			if (document == null)
+			try
+			{
+				await _documentService.DeleteDocumentByIdAsync((uint)id);
+				return Ok($"Document with ID {id} has been deleted.");
+			}
+			catch (KeyNotFoundException ex)
 			{
 				return NotFound();
 			}
-
-			_documents.Remove(document);
-			return Ok($"Document with ID {id} has been deleted.");
 		}
 	}
 }
