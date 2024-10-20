@@ -5,7 +5,7 @@ using Business.Services;
 using Business.Models.Domain;
 using AutoMapper;
 
-namespace DocumentManagementSystem.Controllers
+namespace Web.Controllers
 {
 	[ApiController]
 	[ApiVersion("1")]
