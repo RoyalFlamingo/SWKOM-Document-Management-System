@@ -1,6 +1,10 @@
 using Swashbuckle.AspNetCore.SwaggerGen;
 using Asp.Versioning;
 using Asp.Versioning.ApiExplorer;
+using Persistence;
+using Npgsql;
+using Microsoft.EntityFrameworkCore;
+using System.Reflection;
 
 namespace DocumentManagementSystem
 {
@@ -35,6 +39,13 @@ namespace DocumentManagementSystem
 				 });
 
 			builder.Services.AddRouting(options => options.LowercaseUrls = true);
+
+			// DB context
+			builder.Services.AddDbContext<DocumentsDbContext>(options =>
+				options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
+
+			// automapper
+			builder.Services.AddAutoMapper(Assembly.GetExecutingAssembly());
 
 			// Services
 			builder.Services.AddControllers();
@@ -72,6 +83,13 @@ namespace DocumentManagementSystem
 				{
 					c.SwaggerEndpoint("/swagger/v1/swagger.json", "API V1");
 				});
+			}
+
+			// makes sure to create the db and apply migrations
+			using (var scope = app.Services.CreateScope())
+			{
+				var dbContext = scope.ServiceProvider.GetRequiredService<DocumentsDbContext>();
+				dbContext.Database.Migrate();
 			}
 
 			app.UseHttpsRedirection();

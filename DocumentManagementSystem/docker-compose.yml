@@ -10,6 +10,8 @@ services:
     environment:
       - ASPNETCORE_ENVIRONMENT=Development
       - ASPNETCORE_URLS=https://+:8081
+    depends_on:
+      - postgres
 
   nginx:
     image: nginx:alpine
@@ -21,3 +23,27 @@ services:
       - ./Web/wwwroot/html:/usr/share/nginx/html
     depends_on:
       - web
+
+  postgres:
+    image: postgres:latest
+    environment:
+      POSTGRES_USER: karo
+      POSTGRES_PASSWORD: karo
+      POSTGRES_DB: dmsdb
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+ 
+  pgadmin:
+    image: dpage/pgadmin4
+    environment:
+      PGADMIN_DEFAULT_EMAIL: karo@karo.com
+      PGADMIN_DEFAULT_PASSWORD: karo
+    ports:
+      - "5050:80"
+    depends_on:
+      - postgres
+
+volumes:
+  postgres-data:

@@ -1,24 +1,17 @@
 using Microsoft.AspNetCore.Mvc;
 using Asp.Versioning;
-using DocumentManagementSystem.Persistence.Models.Entities;
+using Persistence.Models.Entities;
+using Business.Services;
 
 namespace DocumentManagementSystem.Controllers
 {
 	[ApiController]
 	[ApiVersion("1")]
 	[Route("api/v{version:apiVersion}/[controller]")]
-	public class DocumentsController : ControllerBase
+	public class DocumentsController(ILogger<DocumentsController> logger, IDocumentService documentService) : ControllerBase
 	{
-		private readonly ILogger<DocumentsController> _logger;
-
-		// Test data, to be replaced with the actual service
-		private static readonly List<Document> _documents = new List<Document>() { new Document { Id = 1, Name = "Fake Document 1" } };
-		private static int nextId = 2;
-
-		public DocumentsController(ILogger<DocumentsController> logger)
-		{
-			_logger = logger;
-		}
+		private readonly ILogger<DocumentsController> _logger = logger;
+		private readonly IDocumentService _documentService = documentService;
 
 		// Upload document
 		[HttpPost(Name = "UploadDocument")]
@@ -26,7 +19,7 @@ namespace DocumentManagementSystem.Controllers
 		public async Task<ActionResult> UploadDocumentAsync(IFormFile file)
 		{
 			// Testing
-			var document = new Document
+			var document = new DocumentEntity
 			{
 				Id = nextId++,
 				Name = file.FileName,
@@ -43,7 +36,7 @@ namespace DocumentManagementSystem.Controllers
 		[HttpGet("{id}", Name = "GetDocumentById")]
 		[ProducesResponseType(StatusCodes.Status200OK)]
 		[ProducesResponseType(StatusCodes.Status404NotFound)]
-		public async Task<ActionResult<Document>> GetDocumentById(int id)
+		public async Task<ActionResult<DocumentEntity>> GetDocumentById(int id)
 		{
 			// Testing
 			var document = _documents.FirstOrDefault(d => d.Id == id);
