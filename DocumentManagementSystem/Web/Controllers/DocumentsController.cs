@@ -10,10 +10,11 @@ namespace Web.Controllers
 	[ApiController]
 	[ApiVersion("1")]
 	[Route("api/v{version:apiVersion}/[controller]")]
-	public class DocumentsController(ILogger<DocumentsController> logger, IDocumentService documentService, IMapper mapper) : ControllerBase
+	public class DocumentsController(ILogger<DocumentsController> logger, IDocumentService documentService, IRabbitMQService rabbitMQService, IMapper mapper) : ControllerBase
 	{
 		private readonly ILogger<DocumentsController> _logger = logger;
 		private readonly IDocumentService _documentService = documentService;
+		private readonly IRabbitMQService _rabbitMQService = rabbitMQService;
 		private readonly IMapper _mapper = mapper;
 
 		// Upload document
@@ -35,6 +36,8 @@ namespace Web.Controllers
 			var document = _mapper.Map<Document>(documentRequest);
 
 			await _documentService.AddDocumentAsync(document);
+
+			_rabbitMQService.SendMessage(RabbitMQQueues.FileQueue, document.Name);
 
 			return Ok(document);
 		}
