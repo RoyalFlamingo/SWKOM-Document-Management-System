@@ -16,8 +16,18 @@ services:
       - ASPNETCORE_REMOTE_DEBUGGING=5005   # port for debugging
     depends_on:
       - postgres
+      - rabbitmq
     volumes:
       - ./src:/app
+ 
+  rabbitmq:
+    image: rabbitmq:3-management
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    environment:
+      RABBITMQ_DEFAULT_USER: karo
+      RABBITMQ_DEFAULT_PASS: karo
 
   nginx:
     image: nginx:alpine
