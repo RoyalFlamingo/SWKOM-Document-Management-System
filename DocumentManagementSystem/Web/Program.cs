@@ -11,6 +11,7 @@ using Business.Models.Domain;
 using Business.Models.DTO.Validation;
 using FluentValidation.AspNetCore;
 using FluentValidation;
+using Business.Models.Config;
 
 namespace DocumentManagementSystem
 {
@@ -53,6 +54,9 @@ namespace DocumentManagementSystem
 
 			builder.Services.AddRouting(options => options.LowercaseUrls = true);
 
+			// config
+			builder.Services.Configure<RabbitMQConfig>(builder.Configuration.GetSection("RabbitMQ"));
+
 			// DB context
 			builder.Services.AddDbContext<DocumentsDbContext>(options =>
 				options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
@@ -73,7 +77,7 @@ namespace DocumentManagementSystem
 
 			// Services
 			builder.Services.AddScoped<IDocumentService, DocumentService>();
-
+			builder.Services.AddSingleton<IRabbitMQService, RabbitMQService>();
 
 			builder.Services.AddControllers();
 			builder.Services.AddEndpointsApiExplorer();
