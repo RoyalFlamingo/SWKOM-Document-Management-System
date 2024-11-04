@@ -14,6 +14,7 @@ namespace DocumentManagementSystem.Tests;
 public class DocumentsControllerTests
 {
 	private readonly Mock<IDocumentService> _mockDocumentService;
+	private readonly Mock<IRabbitMQService> _mockMQRabbitService;
 	private readonly Mock<ILogger<DocumentsController>> _mockLogger;
 	private readonly IMapper _mapper;
 	private readonly DocumentsController _controller;
@@ -22,6 +23,7 @@ public class DocumentsControllerTests
 	{
 		_mockDocumentService = new Mock<IDocumentService>();
 		_mockLogger = new Mock<ILogger<DocumentsController>>();
+		_mockMQRabbitService = new Mock<IRabbitMQService>();
 
 		// AutoMapper configuration for the tests
 		var config = new MapperConfiguration(cfg =>
@@ -32,7 +34,7 @@ public class DocumentsControllerTests
 
 		_mapper = config.CreateMapper();
 
-		_controller = new DocumentsController(_mockLogger.Object, _mockDocumentService.Object, _mapper);
+		_controller = new DocumentsController(_mockLogger.Object, _mockDocumentService.Object, _mockMQRabbitService.Object, _mapper);
 	}
 
 	[Fact]
