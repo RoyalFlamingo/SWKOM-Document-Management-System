@@ -13,6 +13,8 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Web", "Web\Web.csproj", "{9
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Persistence", "Persistence\Persistence.csproj", "{48EEA6F1-F471-44AD-BAC2-525519C03446}"
 EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "OcrWorker", "OcrWorker\OcrWorker.csproj", "{3ABB513E-70DF-4847-8AEE-E2ECE2A365C0}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -39,6 +41,10 @@ Global
 		{48EEA6F1-F471-44AD-BAC2-525519C03446}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{48EEA6F1-F471-44AD-BAC2-525519C03446}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{48EEA6F1-F471-44AD-BAC2-525519C03446}.Release|Any CPU.Build.0 = Release|Any CPU
+		{3ABB513E-70DF-4847-8AEE-E2ECE2A365C0}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{3ABB513E-70DF-4847-8AEE-E2ECE2A365C0}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{3ABB513E-70DF-4847-8AEE-E2ECE2A365C0}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{3ABB513E-70DF-4847-8AEE-E2ECE2A365C0}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
