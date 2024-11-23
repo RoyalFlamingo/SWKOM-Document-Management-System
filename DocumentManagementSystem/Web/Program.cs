@@ -12,6 +12,7 @@ using Business.Models.DTO.Validation;
 using FluentValidation.AspNetCore;
 using FluentValidation;
 using Business.Models.Config;
+using Minio;
 
 namespace DocumentManagementSystem
 {
@@ -74,6 +75,17 @@ namespace DocumentManagementSystem
 			// fluentvalidation
 			builder.Services.AddFluentValidationAutoValidation();
 			builder.Services.AddValidatorsFromAssemblyContaining<DocumentUploadDtoValidator>();
+
+			// Minio
+			builder.Services.AddSingleton<IMinioClient>(sp =>
+			{
+				var config = builder.Configuration.GetSection("MinIO");
+				return new MinioClient()
+					.WithEndpoint(config["Endpoint"])
+					.WithCredentials(config["AccessKey"], config["SecretKey"])
+					.Build();
+			});
+			builder.Services.AddSingleton<IMinioService, MinioService>();
 
 			// Services
 			builder.Services.AddScoped<IDocumentService, DocumentService>();

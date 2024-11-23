@@ -1,5 +1,19 @@
 services:
 
+  minio:
+    image: minio/minio:latest
+    container_name: minio
+    ports:
+      - "9000:9000"
+      - "9001:9001"
+    environment:
+      MINIO_ROOT_USER: karo
+      MINIO_ROOT_PASSWORD: nudidudi
+      MINIO_DEFAULT_BUCKETS: documents
+    command: server /data --console-address ":9001"
+    volumes:
+      - 'minio_data:/data'
+
   web:
     image: paperless-rest
     build:
@@ -17,6 +31,7 @@ services:
     depends_on:
       - postgres
       - rabbitmq
+      - minio
     volumes:
       - ./src:/app
       - ./uploads:/app/uploads
@@ -77,3 +92,5 @@ services:
 
 volumes:
   postgres-data:  
+  minio_data:
+    driver: local

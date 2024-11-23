@@ -13,7 +13,7 @@ public class DocumentService(DocumentsDbContext dbContext, IMapper mapper, ILogg
 	private readonly IMapper _mapper = mapper;
 	private readonly ILogger<DocumentService> _logger = logger;
 
-	public async Task AddDocumentAsync(Document document)
+	public async Task<uint> AddDocumentAsync(Document document)
 	{
 		try
 		{
@@ -23,6 +23,8 @@ public class DocumentService(DocumentsDbContext dbContext, IMapper mapper, ILogg
 
 			_dbContext.Documents.Add(documentEntity);
 			await _dbContext.SaveChangesAsync();
+
+			return documentEntity.Id;
 		}
 		catch (AutoMapperMappingException ex)
 		{

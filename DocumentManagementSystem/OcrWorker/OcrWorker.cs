@@ -12,7 +12,8 @@ namespace OCRWorker
 	public class OcrWorker
 	{
 		private IConnection _connection;
-		private IModel _channel;
+		private IModel _channel1;
+		private IModel _channel2;
 
 		public OcrWorker()
 		{
@@ -28,12 +29,14 @@ namespace OCRWorker
 				{
 					var factory = new ConnectionFactory() { HostName = "rabbitmq", UserName = "karo", Password = "karo" };
 					_connection = factory.CreateConnection();
-					_channel = _connection.CreateModel();
+					_channel1 = _connection.CreateModel();
+					_channel2 = _connection.CreateModel();
 
-					_channel.QueueDeclare(queue: "file_queue", durable: false, exclusive: false, autoDelete: false, arguments: null);
+					_channel1.QueueDeclare(queue: "file_queue", durable: false, exclusive: false, autoDelete: false, arguments: null);
+					_channel2.QueueDeclare(queue: "ocr_result_queue", durable: false, exclusive: false, autoDelete: false, arguments: null);
 					Console.WriteLine("Erfolgreich mit RabbitMQ verbunden und Queue erstellt.");
 
-					break; // Wenn die Verbindung klappt, verlässt es die Schleife
+					break;
 				}
 				catch (Exception ex)
 				{
@@ -51,7 +54,7 @@ namespace OCRWorker
 
 		public void Start()
 		{
-			var consumer = new EventingBasicConsumer(_channel);
+			var consumer = new EventingBasicConsumer(_channel1);
 			consumer.Received += (model, ea) =>
 			{
 				var body = ea.Body.ToArray();
@@ -65,21 +68,18 @@ namespace OCRWorker
 
 					Console.WriteLine($"[x] Received ID: {id}, FilePath: {filePath}");
 
-					// Stelle sicher, dass die Datei existiert
 					if (!File.Exists(filePath))
 					{
 						Console.WriteLine($"Fehler: Datei {filePath} nicht gefunden.");
 						return;
 					}
 
-					// OCR-Verarbeitung starten
 					var extractedText = PerformOcr(filePath);
 
 					if (!string.IsNullOrEmpty(extractedText))
 					{
-						// Ergebnis zurück an RabbitMQ senden
 						var resultBody = Encoding.UTF8.GetBytes($"{id}|{extractedText}");
-						_channel.BasicPublish(exchange: "", routingKey: "ocr_result_queue", basicProperties: null, body: resultBody);
+						_channel2.BasicPublish(exchange: "", routingKey: "ocr_result_queue", basicProperties: null, body: resultBody);
 
 						Console.WriteLine($"[x] Sent result for ID: {id}");
 					}
@@ -90,7 +90,7 @@ namespace OCRWorker
 				}
 			};
 
-			_channel.BasicConsume(queue: "file_queue", autoAck: true, consumer: consumer);
+			_channel1.BasicConsume(queue: "file_queue", autoAck: true, consumer: consumer);
 		}
 
 		private string PerformOcr(string filePath)
@@ -99,7 +99,7 @@ namespace OCRWorker
 
 			try
 			{
-				using (var images = new MagickImageCollection(filePath)) // MagickImageCollection für mehrere Seiten
+				using (var images = new MagickImageCollection(filePath))
 				{
 					foreach (var image in images)
 					{
@@ -115,7 +115,6 @@ namespace OCRWorker
 						// Prüfe, ob eine erhebliche Schräglage vorhanden ist
 						image.Write(tempPngFile);
 
-						// Verwende die Tesseract CLI für jede Seite
 						var psi = new ProcessStartInfo
 						{
 							FileName = "tesseract",
@@ -131,7 +130,7 @@ namespace OCRWorker
 							stringBuilder.Append(result);
 						}
 
-						File.Delete(tempPngFile); // Lösche die temporäre PNG-Datei nach der Verarbeitung
+						File.Delete(tempPngFile);
 					}
 				}
 			}
@@ -150,7 +149,8 @@ namespace OCRWorker
 
 		public void Dispose()
 		{
-			_channel?.Close();
+			_channel1?.Close();
+			_channel2?.Close();
 			_connection?.Close();
 		}
 	}

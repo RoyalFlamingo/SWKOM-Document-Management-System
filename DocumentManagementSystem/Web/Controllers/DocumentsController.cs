@@ -10,11 +10,12 @@ namespace Web.Controllers
 	[ApiController]
 	[ApiVersion("1")]
 	[Route("api/v{version:apiVersion}/[controller]")]
-	public class DocumentsController(ILogger<DocumentsController> logger, IDocumentService documentService, IRabbitMQService rabbitMQService, IMapper mapper) : ControllerBase
+	public class DocumentsController(ILogger<DocumentsController> logger, IDocumentService documentService, IRabbitMQService rabbitMQService, IMinioService minioService,  IMapper mapper) : ControllerBase
 	{
 		private readonly ILogger<DocumentsController> _logger = logger;
 		private readonly IDocumentService _documentService = documentService;
 		private readonly IRabbitMQService _rabbitMQService = rabbitMQService;
+		private readonly IMinioService _minioService = minioService;
 		private readonly IMapper _mapper = mapper;
 
 		// Upload document
@@ -22,8 +23,16 @@ namespace Web.Controllers
 		[ProducesResponseType(StatusCodes.Status200OK)]
 		public async Task<ActionResult> UploadDocumentAsync([FromForm] DocumentUploadDto documentUploadDto)
 		{
-			if(!ModelState.IsValid)
+			if (!ModelState.IsValid)
 			{
+				return BadRequest(ModelState);
+			}
+
+			var fileName = documentUploadDto.File.FileName;
+
+			if (!fileName.EndsWith(".pdf"))
+			{
+				ModelState.AddModelError("file", "Only PDF files are allowed.");
 				return BadRequest(ModelState);
 			}
 
@@ -35,9 +44,27 @@ namespace Web.Controllers
 
 			var document = _mapper.Map<Document>(documentRequest);
 
-			await _documentService.AddDocumentAsync(document);
+			uint newDocumentId = await _documentService.AddDocumentAsync(document);
 
-			_rabbitMQService.SendMessage(RabbitMQQueues.FileQueue, document.Name);
+			/* Minio: (currently inactive)
+
+			await minioService.UploadFileAsync(fileName, documentUploadDto.File.OpenReadStream());
+			Console.WriteLine($@"File {fileName} uploaded to MinIO.");
+
+			_rabbitMQService.SendMessage(RabbitMQQueues.FileQueue, $"{newDocumentId}|{fileName}");
+			Console.WriteLine($@"File {fileName} sent to RabbitMQ queue."); */
+
+
+			// save file in uploads folder
+			var filePath = Path.Combine("/app/uploads", fileName);
+			Directory.CreateDirectory(Path.GetDirectoryName(filePath)!);
+			await using (var stream = new FileStream(filePath, FileMode.Create))
+			{
+				await documentUploadDto.File.CopyToAsync(stream);
+			}
+
+			_rabbitMQService.SendMessage(RabbitMQQueues.FileQueue, $"{newDocumentId}|{filePath}");
+			Console.WriteLine($@"File Path {filePath} an RabbitMQ Queue gesendet.");
 
 			return Ok(document);
 		}
