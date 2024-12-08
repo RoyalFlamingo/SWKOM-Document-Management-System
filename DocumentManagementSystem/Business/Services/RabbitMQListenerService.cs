@@ -1,5 +1,4 @@
-﻿using AutoMapper;
-using Microsoft.Extensions.Hosting;
+﻿using Microsoft.Extensions.Hosting;
 using RabbitMQ.Client;
 using RabbitMQ.Client.Events;
 using System.Net.Http;
@@ -7,7 +6,8 @@ using System.Net.Http.Json;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
-using Persistence.Models;
+using Business.Models.Domain;
+using System.Text.Json;
 
 namespace Business.Services;
 
@@ -15,15 +15,23 @@ public class RabbitMqListenerService : IHostedService
 {
 	private IConnection _connection;
 	private IModel _channel;
-	public Task StartAsync(CancellationToken cancellationToken)
+
+	private readonly IElasticService _elasticService;
+
+	public async Task StartAsync(CancellationToken cancellationToken)
 	{
-		ConnectToRabbitMQ();
-		StartListening();
-		return Task.CompletedTask;
+		await Task.Run(() =>
+		{
+			ConnectToRabbitMQ();
+			StartListening();
+		}, cancellationToken);
+
+		Console.WriteLine("RabbitMqListenerService gestartet.");
 	}
 
-	public RabbitMqListenerService()
+	public RabbitMqListenerService(IElasticService elasticService)
 	{
+		_elasticService = elasticService;
 	}
 
 	private void ConnectToRabbitMQ()
@@ -58,42 +66,49 @@ public class RabbitMqListenerService : IHostedService
 
 	private void StartListening()
 	{
-		try
+		var consumer = new EventingBasicConsumer(_channel);
+		consumer.Received += (model, ea) =>
 		{
-			var consumer = new EventingBasicConsumer(_channel);
-			consumer.Received += async (model, ea) =>
+			_ = Task.Run(async () =>
 			{
 				var body = ea.Body.ToArray();
 				var message = Encoding.UTF8.GetString(body);
-				var parts = message.Split('|');
 
 				Console.WriteLine($@"Result queue message received: {message}");
 
-				if (parts.Length == 2)
+				try
 				{
-					var id = parts[0];
-					var extractedText = parts[1];
-					if (string.IsNullOrEmpty(extractedText))
+					var options = new JsonSerializerOptions
 					{
-						Console.WriteLine($@"Error: No OCR text for message {id}, ignoring message.");
-						return;
+						PropertyNameCaseInsensitive = true,
+						NumberHandling = System.Text.Json.Serialization.JsonNumberHandling.AllowReadingFromString
+					};
+
+					var document = JsonSerializer.Deserialize<Document>(message, options);
+
+					if (document != null && !string.IsNullOrWhiteSpace(document.OcrContent))
+					{
+						Console.WriteLine($"[x] Received OCR content for ID: {document.Id}");
+
+						await _elasticService.IndexDocument(document);
+
+						Console.WriteLine($"[x] Successfully indexed document with ID: {document.Id}");
 					}
-
-
+					else
+					{
+						Console.WriteLine("[!] Received invalid document or empty OCR content.");
+					}
 				}
-				else
+				catch (Exception ex)
 				{
-					Console.WriteLine(@"Error, invalid message received.");
+					Console.WriteLine($"[!] Failed to process message: {ex.Message}");
 				}
-			};
+			});
+		};
 
-			_channel.BasicConsume(queue: "ocr_result_queue", autoAck: true, consumer: consumer);
-		}
-		catch (Exception ex)
-		{
-			Console.WriteLine($@"Error launching listener for result queue: {ex.Message}");
-		}
+		_channel.BasicConsume(queue: "ocr_result_queue", autoAck: true, consumer: consumer);
 	}
+
 
 	public Task StopAsync(CancellationToken cancellationToken)
 	{
@@ -102,3 +117,5 @@ public class RabbitMqListenerService : IHostedService
 		return Task.CompletedTask;
 	}
 }
+
+

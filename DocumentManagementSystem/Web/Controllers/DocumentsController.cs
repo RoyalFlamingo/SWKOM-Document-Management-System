@@ -10,13 +10,74 @@ namespace Web.Controllers
 	[ApiController]
 	[ApiVersion("1")]
 	[Route("api/v{version:apiVersion}/[controller]")]
-	public class DocumentsController(ILogger<DocumentsController> logger, IDocumentService documentService, IRabbitMQService rabbitMQService, IMinioService minioService,  IMapper mapper) : ControllerBase
+	public class DocumentsController(ILogger<DocumentsController> logger, IDocumentService documentService, 
+		IRabbitMQService rabbitMQService, IMinioService minioService, IElasticService elasticService,  IMapper mapper) : ControllerBase
 	{
 		private readonly ILogger<DocumentsController> _logger = logger;
 		private readonly IDocumentService _documentService = documentService;
 		private readonly IRabbitMQService _rabbitMQService = rabbitMQService;
 		private readonly IMinioService _minioService = minioService;
+		private readonly IElasticService _elasticService = elasticService;
 		private readonly IMapper _mapper = mapper;
+
+		// Add document to elastic
+		[HttpPost("elastic-index", Name = "ElasticIndexDocument")]
+		[ProducesResponseType(StatusCodes.Status200OK)]
+		[ProducesResponseType(StatusCodes.Status500InternalServerError)]
+		public async Task<IActionResult> ElasticIndexDocument([FromBody] Document document)
+		{
+			try
+			{
+				var result = await _elasticService.IndexDocument(document);
+
+				return Ok(new { message = "Document indexed successfully" });
+			}
+			catch (Exception)
+			{
+				return StatusCode(500, new { message = "Failed to index document"});
+			}
+		}
+
+		// Query search
+		[HttpPost("query-search", Name = "QuerySearch")]
+		[ProducesResponseType(StatusCodes.Status200OK)]
+		[ProducesResponseType(StatusCodes.Status404NotFound)]
+		public async Task<IActionResult> SearchByQueryString([FromBody] string searchTerm)
+		{
+			if (string.IsNullOrWhiteSpace(searchTerm))
+			{
+				return BadRequest(new { message = "Search term cannot be empty" });
+			}
+
+			var result = await _elasticService.SearchByQueryString(searchTerm);
+
+			return HandleSearchResponse(result);
+		}
+
+		// Fuzzy search
+		[HttpPost("fuzzy-search", Name = "FuzzySearch")]
+		[ProducesResponseType(StatusCodes.Status200OK)]
+		[ProducesResponseType(StatusCodes.Status404NotFound)]
+		public async Task<IActionResult> SearchByFuzzy([FromBody] string searchTerm)
+		{
+			if (string.IsNullOrWhiteSpace(searchTerm))
+			{
+				return BadRequest(new { message = "Search term cannot be empty" });
+			}
+
+			var result = await _elasticService.SearchByFuzzy(searchTerm);
+
+			return HandleSearchResponse(result);
+		}
+
+
+		private IActionResult HandleSearchResponse(IReadOnlyCollection<Document>? result)
+		{
+			if (result == null)
+				return NotFound(new { message = "No documents found matching the search term." });
+
+			return Ok(result);
+		}
 
 		// Upload document
 		[HttpPost(Name = "UploadDocument")]

@@ -3,7 +3,8 @@
 public record class Document
 {
 	public int Id { get; set; }
-	public required string Name { get; set; }
-	public required long Size { get; set; }
-	public required DateTime UploadedAt { get; set; }
+	public string? Name { get; set; }
+	public long Size { get; set; }
+	public DateTime? UploadedAt { get; set; }
+	public string? OcrContent { get; set; }
 }

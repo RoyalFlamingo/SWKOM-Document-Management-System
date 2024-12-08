@@ -12,8 +12,7 @@ namespace OCRWorker
 	public class OcrWorker
 	{
 		private IConnection _connection;
-		private IModel _channel1;
-		private IModel _channel2;
+		private IModel _channel;
 
 		public OcrWorker()
 		{
@@ -29,11 +28,9 @@ namespace OCRWorker
 				{
 					var factory = new ConnectionFactory() { HostName = "rabbitmq", UserName = "karo", Password = "karo" };
 					_connection = factory.CreateConnection();
-					_channel1 = _connection.CreateModel();
-					_channel2 = _connection.CreateModel();
+					_channel = _connection.CreateModel();
 
-					_channel1.QueueDeclare(queue: "file_queue", durable: false, exclusive: false, autoDelete: false, arguments: null);
-					_channel2.QueueDeclare(queue: "ocr_result_queue", durable: false, exclusive: false, autoDelete: false, arguments: null);
+					_channel.QueueDeclare(queue: "file_queue", durable: false, exclusive: false, autoDelete: false, arguments: null);
 					Console.WriteLine("Erfolgreich mit RabbitMQ verbunden und Queue erstellt.");
 
 					break;
@@ -54,7 +51,7 @@ namespace OCRWorker
 
 		public void Start()
 		{
-			var consumer = new EventingBasicConsumer(_channel1);
+			var consumer = new EventingBasicConsumer(_channel);
 			consumer.Received += (model, ea) =>
 			{
 				var body = ea.Body.ToArray();
@@ -78,10 +75,18 @@ namespace OCRWorker
 
 					if (!string.IsNullOrEmpty(extractedText))
 					{
-						var resultBody = Encoding.UTF8.GetBytes($"{id}|{extractedText}");
-						_channel2.BasicPublish(exchange: "", routingKey: "ocr_result_queue", basicProperties: null, body: resultBody);
+						var resultMessage = new
+						{
+							Id = id,
+							OcrContent = extractedText
+						};
 
-						Console.WriteLine($"[x] Sent result for ID: {id}");
+						string jsonResult = System.Text.Json.JsonSerializer.Serialize(resultMessage);
+						var resultBody = Encoding.UTF8.GetBytes(jsonResult);
+
+						_channel.BasicPublish(exchange: "", routingKey: "ocr_result_queue", basicProperties: null, body: resultBody);
+
+						Console.WriteLine($"[x] Sent OCR result for ID: {id}");
 					}
 				}
 				else
@@ -90,7 +95,7 @@ namespace OCRWorker
 				}
 			};
 
-			_channel1.BasicConsume(queue: "file_queue", autoAck: true, consumer: consumer);
+			_channel.BasicConsume(queue: "file_queue", autoAck: true, consumer: consumer);
 		}
 
 		private string PerformOcr(string filePath)
@@ -105,14 +110,8 @@ namespace OCRWorker
 					{
 						var tempPngFile = Path.Combine(Path.GetTempPath(), Guid.NewGuid() + ".png");
 
-						image.Density = new Density(300, 300); // Setze die Auflösung
-															   //image.ColorType = ColorType.Grayscale; //Unnötige Farben weg
-															   //image.Contrast(); // Erhöht den Kontrast
-															   //image.Sharpen(); // Schärft das Bild, um Unschärfen zu reduzieren
-															   //image.Despeckle(); // Entfernt Bildrauschen
+						image.Density = new Density(300, 300);
 						image.Format = MagickFormat.Png;
-						//image.Resize(image.Width * 2, image.Height * 2); // Vergrößere das Bild um das Doppelte
-						// Prüfe, ob eine erhebliche Schräglage vorhanden ist
 						image.Write(tempPngFile);
 
 						var psi = new ProcessStartInfo
@@ -127,7 +126,7 @@ namespace OCRWorker
 						using (var process = Process.Start(psi))
 						{
 							string result = process.StandardOutput.ReadToEnd();
-							stringBuilder.Append(result);
+							stringBuilder.AppendLine(result.Trim());
 						}
 
 						File.Delete(tempPngFile);
@@ -136,21 +135,16 @@ namespace OCRWorker
 			}
 			catch (Exception ex)
 			{
-				Console.WriteLine($"Fehler bei der OCR-Verarbeitung: {ex.Message}");
-				if (ex.InnerException != null)
-				{
-					Console.WriteLine($"Innere Ausnahme: {ex.InnerException.Message}");
-					Console.WriteLine($"Stacktrace: {ex.StackTrace}");
-				}
+				Console.WriteLine($"OCR error: {ex.Message}");
 			}
 
-			return stringBuilder.ToString();
+			return stringBuilder.ToString().Trim();
 		}
+
 
 		public void Dispose()
 		{
-			_channel1?.Close();
-			_channel2?.Close();
+			_channel?.Close();
 			_connection?.Close();
 		}
 	}

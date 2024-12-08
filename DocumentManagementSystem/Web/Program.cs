@@ -13,6 +13,7 @@ using FluentValidation.AspNetCore;
 using FluentValidation;
 using Business.Models.Config;
 using Minio;
+using Elastic.Clients.Elasticsearch;
 
 namespace DocumentManagementSystem
 {
@@ -90,7 +91,12 @@ namespace DocumentManagementSystem
 			// Services
 			builder.Services.AddScoped<IDocumentService, DocumentService>();
 			builder.Services.AddSingleton<IRabbitMQService, RabbitMQService>();
+			builder.Services.AddSingleton<IElasticService, ElasticService>();
 			builder.Services.AddHostedService<RabbitMqListenerService>();
+
+			var elasticUri = builder.Configuration.GetConnectionString("ElasticSearch") ?? "http://localhost:9200";
+			builder.Services.AddSingleton(new ElasticsearchClient(new Uri(elasticUri)));
+
 
 			builder.Services.AddControllers();
 			builder.Services.AddEndpointsApiExplorer();
