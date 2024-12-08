@@ -1,17 +1,17 @@
 services:
 
   elasticsearch:
-      image: docker.elastic.co/elasticsearch/elasticsearch:8.16.0
-      container_name: elasticsearch
-      ports:
-        - "9200:9200"
-      environment:
-        - xpack.security.enabled=false
-        - discovery.type=single-node
-      volumes:
-        - elasticsearch-data:/data
-      networks:
-        - elastic
+    image: docker.elastic.co/elasticsearch/elasticsearch:8.16.0
+    container_name: elasticsearch
+    ports:
+      - "9200:9200"
+    environment:
+      - xpack.security.enabled=false
+      - discovery.type=single-node
+    volumes:
+      - elasticsearch-data:/data
+    networks:
+      - elastic
 
   kibana:
     image: docker.elastic.co/kibana/kibana:8.16.0
@@ -88,6 +88,8 @@ services:
       - ./Web/wwwroot/html:/usr/share/nginx/html
     depends_on:
       - web
+    networks:
+      - elastic
 
   postgres:
     image: postgres:latest
@@ -112,20 +114,22 @@ services:
       - "5050:80"
     depends_on:
       - postgres
+    networks:
+      - elastic
 
   ocr_worker:
-     image: ocr_worker_image
-     build:
-       context: ./OcrWorker  
-       dockerfile: Dockerfile
-     depends_on:
-       - rabbitmq
-     environment:
-       - ASPNETCORE_ENVIRONMENT=Development
-     volumes:
-       - ./uploads:/app/uploads
-     networks:
-      - elastic 
+    image: ocr_worker_image
+    build:
+      context: ./OcrWorker  
+      dockerfile: Dockerfile
+    depends_on:
+      - rabbitmq
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+    volumes:
+      - ./uploads:/app/uploads
+    networks:
+     - elastic 
 
 volumes:
   postgres-data:  
