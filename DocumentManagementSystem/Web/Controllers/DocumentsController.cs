@@ -81,7 +81,7 @@ namespace Web.Controllers
 				var documentResponse = _mapper.Map<DocumentResponseDto>(document);
 				return Ok(documentResponse);
 			}
-			catch (KeyNotFoundException ex)
+			catch (KeyNotFoundException)
 			{
 				return NotFound();
 			}
@@ -108,7 +108,7 @@ namespace Web.Controllers
 				await _documentService.DeleteDocumentByIdAsync((uint)id);
 				return Ok($"Document with ID {id} has been deleted.");
 			}
-			catch (KeyNotFoundException ex)
+			catch (KeyNotFoundException)
 			{
 				return NotFound();
 			}
