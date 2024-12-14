@@ -156,18 +156,39 @@ namespace Web.Controllers
 		[HttpDelete("{id}", Name = "DeleteDocument")]
 		[ProducesResponseType(StatusCodes.Status200OK)]
 		[ProducesResponseType(StatusCodes.Status404NotFound)]
+		[ProducesResponseType(StatusCodes.Status500InternalServerError)]
 		public async Task<ActionResult> DeleteDocumentAsync(int id)
 		{
 			try
 			{
+				var document = await _documentService.GetDocumentByIdAsync((uint)id);
+				if (document == null)
+				{
+					return NotFound($"Document with ID {id} not found.");
+				}
+
+				var elasticDeleted = await _elasticService.DeleteDocumentAsync(document.Id.ToString());
+				if (!elasticDeleted)
+				{
+					return StatusCode(500, $"Failed to delete document with ID {id} from Elasticsearch.");
+				}
+
+				await _minioService.DeleteFileAsync(document.Name);
+
 				await _documentService.DeleteDocumentByIdAsync((uint)id);
-				return Ok($"Document with ID {id} has been deleted.");
+
+				return Ok($"Document with ID {id} and its associated file have been deleted.");
 			}
 			catch (KeyNotFoundException)
 			{
-				return NotFound();
+				return NotFound($"Document with ID {id} not found.");
+			}
+			catch (Exception ex)
+			{
+				return StatusCode(500, new { message = "Failed to delete document and associated file.", error = ex.Message });
 			}
 		}
+
 
 		[HttpDelete("cleanup-index", Name = "CleanupIndex")]
 		public async Task<IActionResult> CleanupIndex()

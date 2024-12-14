@@ -66,4 +66,22 @@ public class MinioService : IMinioService
 		memoryStream.Seek(0, SeekOrigin.Begin);
 		return memoryStream;
 	}
+
+	public async Task DeleteFileAsync(string fileName)
+	{
+		try
+		{
+			var removeObjectArgs = new RemoveObjectArgs()
+				.WithBucket(_bucketName)
+				.WithObject(fileName);
+
+			await _minioClient.RemoveObjectAsync(removeObjectArgs);
+			Console.WriteLine($"File {fileName} deleted successfully from bucket {_bucketName}.");
+		}
+		catch (MinioException ex)
+		{
+			Console.WriteLine($"Error occurred while deleting file: {ex.Message}");
+			throw;
+		}
+	}
 }

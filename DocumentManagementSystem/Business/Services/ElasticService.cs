@@ -77,6 +77,24 @@ public class ElasticService(ILogger<ElasticService> logger, ElasticsearchClient 
 		return null;
 	}
 
+	public async Task<bool> DeleteDocumentAsync(string documentId)
+	{
+		if (string.IsNullOrWhiteSpace(documentId))
+			throw new ArgumentNullException("Document ID cannot be null or empty.");
+
+		var response = await _client.DeleteAsync<Document>(documentId, d => d.Index("documents"));
+
+		if (!response.IsValidResponse)
+		{
+			_logger.LogError($"Failed to delete document with ID {documentId} from Elasticsearch. Error: {response.DebugInformation}");
+			return false;
+		}
+
+		_logger.LogInformation($"Document with ID {documentId} deleted successfully from Elasticsearch.");
+		return true;
+	}
+
+
 	public async Task<bool> DeleteIndexAsync(string indexName)
 	{
 		var response = await _client.Indices.DeleteAsync(indexName);
