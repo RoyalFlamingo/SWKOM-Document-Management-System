@@ -12,14 +12,23 @@
     <!-- Error Div-->
     <div id="errorMessages" style="color: red;"></div>
 
+    <!-- Form to search documents -->
+    <div>
+        <h3>Search Documents</h3>
+        <input type="text" id="searchTerm" placeholder="Enter search term">
+        <button onclick="searchDocuments()">Search</button>
+        <button onclick="fetchDocuments()">Reset</button>
+    </div>
+
     <!-- Form to upload a new document -->
     <div>
         <h3>Upload Document</h3>
-        <input type="file" id="documentFile"> <!-- Datei-Upload-Input -->
+        <input type="file" id="documentFile">
         <button onclick="addDocument()">Upload Document</button>
     </div>
 
     <!-- Document list -->
+    <h3>Documents</h3>
     <ul id="documentList"></ul>
 
     <script src="/app.js"></script>

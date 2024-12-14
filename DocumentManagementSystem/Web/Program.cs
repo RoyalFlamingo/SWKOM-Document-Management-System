@@ -81,9 +81,9 @@ namespace DocumentManagementSystem
 			builder.Services.AddSingleton<IMinioClient>(sp =>
 			{
 				var config = builder.Configuration.GetSection("MinIO");
-				return new MinioClient()
-					.WithEndpoint(config["Endpoint"])
-					.WithCredentials(config["AccessKey"], config["SecretKey"])
+				return new MinioClient().WithEndpoint("host.docker.internal", 9000)
+					.WithCredentials("karo", "nudidudi")
+					.WithSSL(false)
 					.Build();
 			});
 			builder.Services.AddSingleton<IMinioService, MinioService>();

@@ -24,7 +24,7 @@ public class DocumentService(DocumentsDbContext dbContext, IMapper mapper, ILogg
 			_dbContext.Documents.Add(documentEntity);
 			await _dbContext.SaveChangesAsync();
 
-			return documentEntity.Id;
+			return (uint)documentEntity.Id;
 		}
 		catch (AutoMapperMappingException ex)
 		{
