@@ -58,12 +58,13 @@ namespace OCRWorker
 				var message = Encoding.UTF8.GetString(body);
 				var parts = message.Split('|');
 
-				if (parts.Length == 2)
+				if (parts.Length == 3)
 				{
 					var id = parts[0];
 					var filePath = parts[1];
+					var fileName = parts[2];
 
-					Console.WriteLine($"[x] Received ID: {id}, FilePath: {filePath}");
+					Console.WriteLine($"[x] Received ID: {id}, FilePath: {filePath}, FileName: {fileName}");
 
 					if (!File.Exists(filePath))
 					{
@@ -78,6 +79,7 @@ namespace OCRWorker
 						var resultMessage = new
 						{
 							Id = id,
+							Name = fileName,
 							OcrContent = extractedText
 						};
 

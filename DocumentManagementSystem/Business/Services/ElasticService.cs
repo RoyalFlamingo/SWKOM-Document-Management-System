@@ -76,5 +76,12 @@ public class ElasticService(ILogger<ElasticService> logger, ElasticsearchClient 
 		_logger.LogInformation($"Query search for {searchTerm} resulted in no document found.");
 		return null;
 	}
+
+	public async Task<bool> DeleteIndexAsync(string indexName)
+	{
+		var response = await _client.Indices.DeleteAsync(indexName);
+		return response.IsValidResponse;
+	}
+
 }
 

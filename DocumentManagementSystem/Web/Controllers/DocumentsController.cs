@@ -107,14 +107,8 @@ namespace Web.Controllers
 
 			uint newDocumentId = await _documentService.AddDocumentAsync(document);
 
-			/* Minio: (currently inactive)
-
 			await minioService.UploadFileAsync(fileName, documentUploadDto.File.OpenReadStream());
 			Console.WriteLine($@"File {fileName} uploaded to MinIO.");
-
-			_rabbitMQService.SendMessage(RabbitMQQueues.FileQueue, $"{newDocumentId}|{fileName}");
-			Console.WriteLine($@"File {fileName} sent to RabbitMQ queue."); */
-
 
 			// save file in uploads folder
 			var filePath = Path.Combine("/app/uploads", fileName);
@@ -124,8 +118,8 @@ namespace Web.Controllers
 				await documentUploadDto.File.CopyToAsync(stream);
 			}
 
-			_rabbitMQService.SendMessage(RabbitMQQueues.FileQueue, $"{newDocumentId}|{filePath}");
-			Console.WriteLine($@"File Path {filePath} an RabbitMQ Queue gesendet.");
+			_rabbitMQService.SendMessage(RabbitMQQueues.FileQueue, $"{newDocumentId}|{filePath}|{fileName}");
+			Console.WriteLine($@"{fileName} an RabbitMQ Queue gesendet.");
 
 			return Ok(document);
 		}
@@ -172,6 +166,20 @@ namespace Web.Controllers
 			catch (KeyNotFoundException)
 			{
 				return NotFound();
+			}
+		}
+
+		[HttpDelete("cleanup-index", Name = "CleanupIndex")]
+		public async Task<IActionResult> CleanupIndex()
+		{
+			try
+			{
+				var response = await _elasticService.DeleteIndexAsync("documents");
+				return Ok(new { message = "Index cleaned up successfully." });
+			}
+			catch (Exception ex)
+			{
+				return StatusCode(500, new { message = "Failed to clean up index.", error = ex.Message });
 			}
 		}
 	}

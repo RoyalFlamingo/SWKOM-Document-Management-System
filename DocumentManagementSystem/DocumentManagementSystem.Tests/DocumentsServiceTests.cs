@@ -19,10 +19,8 @@ public class DocumentServiceTests : IClassFixture<InMemoryDatabaseFixture>
 
 	public DocumentServiceTests(InMemoryDatabaseFixture fixture)
 	{
-		// Verwende den DbContext aus der Fixture
 		_dbContext = fixture.DbContext;
 
-		// AutoMapper configuration for testing
 		var config = new MapperConfiguration(cfg =>
 		{
 			cfg.CreateMap<Document, DocumentEntity>().ReverseMap();
@@ -54,7 +52,7 @@ public class DocumentServiceTests : IClassFixture<InMemoryDatabaseFixture>
 		// Assert
 		var addedDocument = await _dbContext.Documents.FirstOrDefaultAsync(d => d.Name == "Test Document");
 		Assert.NotNull(addedDocument);
-		Assert.Equal((ulong)1024, addedDocument.Size);
+		Assert.Equal(1024, addedDocument.Size);
 		Assert.NotEqual(DateTime.MinValue, addedDocument.UploadedAt);
 	}
 
@@ -68,7 +66,7 @@ public class DocumentServiceTests : IClassFixture<InMemoryDatabaseFixture>
 		await _dbContext.SaveChangesAsync();
 
 		// Act
-		await _documentService.DeleteDocumentByIdAsync(document.Id);
+		await _documentService.DeleteDocumentByIdAsync((uint)document.Id);
 
 		// Assert
 		var deletedDocument = await _dbContext.Documents.FindAsync(document.Id);
@@ -114,7 +112,7 @@ public class DocumentServiceTests : IClassFixture<InMemoryDatabaseFixture>
 		await _dbContext.SaveChangesAsync();
 
 		// Act
-		var result = await _documentService.GetDocumentByIdAsync(document.Id);
+		var result = await _documentService.GetDocumentByIdAsync((uint)document.Id);
 
 		// Assert
 		Assert.NotNull(result);
