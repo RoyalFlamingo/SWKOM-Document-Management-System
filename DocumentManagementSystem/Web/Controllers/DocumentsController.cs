@@ -168,10 +168,6 @@ namespace Web.Controllers
 				}
 
 				var elasticDeleted = await _elasticService.DeleteDocumentAsync(document.Id.ToString());
-				if (!elasticDeleted)
-				{
-					return StatusCode(500, $"Failed to delete document with ID {id} from Elasticsearch.");
-				}
 
 				await _minioService.DeleteFileAsync(document.Name);
 
