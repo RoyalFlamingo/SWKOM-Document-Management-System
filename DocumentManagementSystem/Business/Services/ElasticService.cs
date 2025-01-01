@@ -34,7 +34,7 @@ public class ElasticService(ILogger<ElasticService> logger, ElasticsearchClient 
 		   .Query(q => q.Match(m => m
 			   .Field(f => f.OcrContent)
 			   .Query(searchTerm)
-			   .Fuzziness(new Fuzziness(4)))));
+			   .Fuzziness(new Fuzziness(2)))));
 
 		if (response.IsValidResponse)
 		{
