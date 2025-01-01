@@ -1,36 +1,198 @@
 ﻿<!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Document List</title>
-    <link rel="stylesheet" href="/styles.css">
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>Document List</title>
 </head>
 <body>
-    <h1>Document List</h1>
+	<div class="container">
+		<header>
+			<h1>Document List</h1>
+		</header>
+		<main>
+			<!-- Error Messages -->
+			<div id="errorMessages" class="error"></div>
 
-    <!-- Error Div-->
-    <div id="errorMessages" style="color: red;"></div>
+			<!-- Search Section -->
+			<section class="search-section">
+				<h3>Search Documents</h3>
+				<div class="input-group">
+					<input type="text" id="searchTerm" placeholder="Enter search term">
+					<div class="button-group">
+						<button onclick="searchDocuments()">Search</button>
+						<button onclick="fetchDocuments()">Reset</button>
+					</div>
+				</div>
+			</section>
 
-    <!-- Form to search documents -->
-    <div>
-        <h3>Search Documents</h3>
-        <input type="text" id="searchTerm" placeholder="Enter search term">
-        <button onclick="searchDocuments()">Search</button>
-        <button onclick="fetchDocuments()">Reset</button>
-    </div>
+			<!-- Upload Section -->
+			<section class="upload-section">
+				<h3>Upload Document</h3>
+				<div class="input-group">
+					<input type="file" id="documentFile">
+					<button onclick="addDocument()">Upload</button>
+				</div>
+			</section>
 
-    <!-- Form to upload a new document -->
-    <div>
-        <h3>Upload Document</h3>
-        <input type="file" id="documentFile">
-        <button onclick="addDocument()">Upload Document</button>
-    </div>
-
-    <!-- Document list -->
-    <h3>Documents</h3>
-    <ul id="documentList"></ul>
-
-    <script src="/app.js"></script>
+			<!-- Document List -->
+			<section class="document-list-section">
+				<h3>Documents</h3>
+				<ul id="documentList" class="document-list"></ul>
+			</section>
+		</main>
+	</div>
+	<script src="/app.js"></script>
 </body>
 </html>
+
+
+<style>
+	body {
+		font-family: 'Arial', sans-serif;
+		background-color: #2c2c2c;
+		color: white;
+		margin: 0;
+		display: flex;
+		justify-content: center;
+		align-items: center;
+		min-height: 100vh;
+	}
+
+	.container {
+		width: 90%;
+		max-width: 800px;
+		padding: 20px;
+		background-color: #333;
+		border-radius: 10px;
+		box-shadow: 0 4px 10px rgba(0, 0, 0, 0.5);
+		text-align: center;
+	}
+
+	header {
+		margin-bottom: 20px;
+	}
+
+	h1 {
+		font-size: 2rem;
+		margin: 0;
+	}
+
+	main {
+		text-align: left;
+	}
+
+	.error {
+		color: #ff4d4d;
+		margin-bottom: 15px;
+		text-align: center;
+		font-weight: bold;
+	}
+
+	.input-group {
+		display: flex;
+		align-items: center;
+		gap: 10px;
+		flex-wrap: wrap;
+	}
+
+	input[type="text"],
+	input[type="file"] {
+		padding: 8px;
+		font-size: 14px;
+		border: none;
+		border-radius: 5px;
+		outline: none;
+		width: 100%;
+		max-width: 300px;
+	}
+
+	button {
+		padding: 8px 15px;
+		font-size: 14px;
+		cursor: pointer;
+		background-color: #007bff;
+		color: white;
+		border: none;
+		border-radius: 5px;
+		transition: all 0.2s ease;
+	}
+
+	button:hover {
+		background-color: #0056b3;
+	}
+
+	button.delete {
+		background-color: #dc3545;
+	}
+
+	button.delete:hover {
+		background-color: #a71d2a;
+	}
+
+	.document-list {
+		list-style: none;
+		padding: 0;
+		margin: 15px 0;
+	}
+
+	.document-list li {
+		padding: 10px;
+		background-color: #444;
+		border-radius: 5px;
+		margin-bottom: 10px;
+		display: flex;
+		justify-content: space-between;
+		align-items: center;
+	}
+
+	section {
+		margin-bottom: 30px;
+	}
+
+	.button-group {
+		display: flex;
+		gap: 10px;
+	}
+
+	.popup {
+		position: fixed;
+		top: 0;
+		left: 0;
+		width: 100%;
+		height: 100%;
+		background: rgba(0, 0, 0, 0.7);
+		display: flex;
+		justify-content: center;
+		align-items: center;
+		z-index: 1000;
+	}
+
+	.popup-content {
+		background: #333;
+		color: white;
+		padding: 20px;
+		border-radius: 10px;
+		width: 80%;
+		max-width: 500px;
+		text-align: center;
+		box-shadow: 0 4px 10px rgba(0, 0, 0, 0.5);
+	}
+
+	.popup-close {
+		background: #dc3545;
+		color: white;
+		border: none;
+		padding: 5px 10px;
+		font-size: 14px;
+		cursor: pointer;
+		border-radius: 5px;
+		position: absolute;
+		top: 10px;
+		right: 10px;
+	}
+
+	.popup-close:hover {
+		background: #a71d2a;
+	}
+</style>
